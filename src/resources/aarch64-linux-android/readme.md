@@ -9,3 +9,5 @@
 ![ELF头编码解析.png](ELF头编码解析.png)
 
 ![plt.png](plt.png)
+
+![img.png](ldd使用.png)
