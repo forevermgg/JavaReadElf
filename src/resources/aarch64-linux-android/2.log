@@ -1,3 +1,4 @@
+# readelf -S libc++_shared.so > 2.log
 There are 36 section headers, starting at offset 0x5f2640:
 
 Section Headers:
