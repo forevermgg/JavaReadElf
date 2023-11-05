@@ -39,7 +39,107 @@ Elf64_Xword p_align;      // 段在内存中的对齐方式
 
 通过读取程序头部表中每个条目的`p_type`字段，可以确定每个段的类型，并根据需要进行相应的处理和加载操作。
 
+#### PT_LOAD
 一个可执行文件至少有一个`PT_LOAD`类型的段。这类程序头描述的是可装载的段，也就是说，这种类型的段将被装载或映射到内存中。
+例如：一个动态链接的ELF可执行文件通常包含以下两个可装载的段（类型为PT_LOAD）:
++ 存放程序代码的text段；
++ 存放全局变量和动态链接信息的data段；
+上面的两个段将会被映射到内存中，并根据p_align中存放的值在内存中对齐。这个变量描述了段在文件和内存中的布局。
+
+#### PT_DYNAMIC
+
+动态段（`Dynamic Segment`）是 `ELF`（可执行和可链接格式）文件中的一种特殊类型的段，用于存储与动态链接相关的信息。动态段在程序头部表（`Program Header Table`）中通过`p_type`字段的值为`PT_DYNAMIC`来标识。
+
+动态段的内容是一个动态链接器所需的动态信息表，其中包含了各种动态链接所需的符号、重定位、库加载等信息。这些信息在运行时由动态链接器处理，以完成动态链接过程。
+
+动态段中的数据结构被称为动态段头表（`Dynamic Segment Header Table`），也被称为`DT`确定符（`DT_XXX`）数组。该表由多个连续的项组成，每个项都有两个成员：
+
++ `d_tag`：标签，表示该项的类型，例如`DT_SYMTAB`表示符号表地址，`DT_STRTAB`表示字符串表地址等。
++ `d_val`或`d_ptr`：具体的值或指针，表示与标签相关的数据。
+
+动态段头表中的项以`NULL`结尾，即最后一项的`d_tag`的值为`0`，用于标识表的结束。
+
+动态段提供了运行时动态链接所需的关键信息，使得操作系统或加载器能够在程序加载和运行时，根据需要加载库、解析符号并完成符号重定位等任务。
+
+动态段是动态链接可执行文件所特有的，包含了动态链接所必需的一些信息。在动态段中包含了一些标记值和指针，包括但不限于以下内容：
+
++ 运行时需要链接的共享库列表
++ 全局偏移表`GOT`的地址
++ 重定向条目相关信息
+
+动态段包含了一些结构体，在这些结构体中存放着与动态链接相关的信息。`d_tag`成员变量控制着`d_un`的含义。
+
+`Elf64_Dyn` 是`ELF`（可执行和可链接格式）文件中动态段的数据结构，用于存储动态链接所需的信息。它是一个在`64`位系统上定义的结构体类型。
+
+以下是`Elf64_Dyn`结构体的定义：
+```c++
+typedef struct {
+    Elf64_Sxword d_tag; // 标签，表示该项的类型
+    union {
+        Elf64_Xword d_val; // 具体的值
+        Elf64_Addr d_ptr;  // 具体的指针
+    } d_un;
+} Elf64_Dyn;
+```
+`d_tag`字段表示该项的类型，可以通过不同的标签值来识别不同的类型。常见的标签包括：
+
++ `DT_NULL`：表的结束标志。
++ `DT_NEEDED`：依赖的库名称。
++ `DT_STRTAB`：字符串表的地址。
++ `DT_SYMTAB`：符号表的地址。
++ `DT_REL` 或 `DT_RELA`：重定位表的地址。
++ `DT_INIT`：初始化函数的入口地址。
++ `DT_FINI`：终止函数的入口地址。
++ `DT_HASH`：哈希表的地址。
++ `DT_PLTGOT`：全局偏移表的地址。
++ `DT_DEBUG`：调试信息的入口地址。
+
+`d_un` 联合体根据`d_tag`的不同类型存储具体的值或指针。如果标签是与数值相关的类型，则使用`d_val`成员存储；如果标签是与指针相关的类型，则使用`d_ptr`成员存储。
+
+通过遍历动态段中的`Elf64_Dyn`结构体数组，可以获取动态链接所需的各种信息，如库依赖关系、符号表地址、重定位表地址等。这些信息在运行时由动态链接器（如 `ld.so`）使用，以完成动态链接和运行程序。
+
+#### PT_PHDR
+`PT_PHDR`段中保存了程序头本身的位置和大小。`Phdr`表中保存了所有的`Phdr`对文件（以及内存镜像）中段的描述信息。
+
+可以使用 'readelf -l <filename>'命令查看文件的`Phdr`表：
+```bash
+❯ readelf -l libc++_shared.so
+
+Elf file type is DYN (Shared object file)
+Entry point 0x487b0
+There are 8 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x00000000000d5a94 0x00000000000d5a94  R E    0x1000
+  LOAD           0x00000000000d6018 0x00000000000d7018 0x00000000000d7018
+                 0x00000000000080e0 0x000000000000b3e8  RW     0x1000
+  DYNAMIC        0x00000000000dccf8 0x00000000000ddcf8 0x00000000000ddcf8
+                 0x00000000000001f0 0x00000000000001f0  RW     0x8
+  NOTE           0x0000000000000200 0x0000000000000200 0x0000000000000200
+                 0x0000000000000024 0x0000000000000024  R      0x4
+  NOTE           0x00000000000d59fc 0x00000000000d59fc 0x00000000000d59fc
+                 0x0000000000000098 0x0000000000000098  R      0x4
+  GNU_EH_FRAME   0x00000000000bc000 0x00000000000bc000 0x00000000000bc000
+                 0x0000000000003d14 0x0000000000003d14  R      0x4
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x00000000000d6018 0x00000000000d7018 0x00000000000d7018
+                 0x0000000000007fe8 0x0000000000007fe8  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .note.gnu.build-id .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .plt .text .rodata .eh_frame_hdr .eh_frame .gcc_except_table .note.android.ident 
+   01     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss 
+   02     .dynamic 
+   03     .note.gnu.build-id 
+   04     .note.android.ident 
+   05     .eh_frame_hdr 
+   06     
+   07     .init_array .fini_array .data.rel.ro .dynamic .got 
+```
 
 ### p_flags;       // 段标志
 
