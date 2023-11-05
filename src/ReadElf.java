@@ -372,7 +372,7 @@ public class ReadElf implements AutoCloseable {
             // Elf64_Word sh_name; /* Section name *
             // sh_name 节头名字在字符串表中的偏移，单位是字节。
             long sh_name = readWord();
-            System.err.println("ReadElf" + " sh_name = " + readShStrTabEntry(sh_name));
+            System.err.println("ReadElf" + " all sh_name = " + readShStrTabEntry(sh_name));
             // Elf64_Word sh_type; /* Section type */
             // sh_type 节的类型
             long sh_type = readWord();
