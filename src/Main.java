@@ -13,8 +13,10 @@ public class Main {
         File file = new File(Objects.requireNonNull(Main.class.getResource("resources")).getPath() + "/aarch64-linux-android/libc++_shared.so");
         System.err.println(file.getAbsoluteFile());
         ReadElf re = new ReadElf(file);
-        re.getSymbol("x");
-        re.getDynamicSymbol("x");
+        ReadElf.Symbol symbol = re.getSymbol("use_face");
+        System.err.println("libc++_shared.so " + " Symbol Check = " + symbol);
+        ReadElf.Symbol dynamicSymbol = re.getDynamicSymbol("use_face");
+        System.err.println("libc++_shared.so " + " DynamicSymbol Check = " + dynamicSymbol);
         re.close();
     }
 }

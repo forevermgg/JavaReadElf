@@ -486,6 +486,7 @@ public class ReadElf implements AutoCloseable {
 
             final String symName = readStrTabEntry(symStrOffset, symStrSize, st_name);
             if (symName != null) {
+                System.err.println("ReadElf readSymbolTable " + " symName = " + symName);
                 Symbol s = new Symbol(symName, st_info);
                 result.put(symName, s);
             }
