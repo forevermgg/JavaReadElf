@@ -249,6 +249,7 @@ public class ReadElf implements AutoCloseable {
         }
 
         mEndian = mBuffer[EI_DATA]; // EI_CLASS == 5
+        System.err.println("ReadElf" + " EI_DATA = " + bytes2hex(new byte[]{(byte) mEndian}));
         if (mEndian == ELFDATA2LSB) {
             System.err.println("ReadElf" + " EI_DATA = " + bytes2hex(new byte[]{(byte) mEndian}));
         } else if (mEndian == ELFDATA2MSB) {
@@ -311,11 +312,12 @@ public class ReadElf implements AutoCloseable {
         // Elf64_Addr e_entry; /* Entry point address */
         // e_entry 程序入口的虚拟地址
         long e_entry = readAddr();
-
+        System.err.println("ReadElf" + " e_entry = " + e_entry);
         // Elf64_Off 8 8 Unsigned file offset
         // Elf64_Off e_phoff; /* Program header offset */
         // e_phoff 程序段头表在该文件内的偏移，单位是字节
         long ph_off = readOff();
+        System.err.println("ReadElf" + " ph_off = " + ph_off);
         // Elf64_Off 8 8 Unsigned file offset
         // Elf64_Off e_shoff; /* Section header offset */
         // e_shoff 节头表在该文件内的偏移，单位是字节
